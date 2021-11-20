@@ -7,14 +7,16 @@ import { isGenericMessageEvent } from './utils/helpers';
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
   signingSecret: process.env.SLACK_SIGNING_SECRET,
-  logLevel: LogLevel.DEBUG,
+  socketMode: true, // add this
+  appToken: process.env.SLACK_APP_TOKEN, // add this
+  // logLevel: LogLevel.DEBUG,
 });
 
-app.use(async ({ next }) => {
-  // TODO: This can be improved in future versions
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  await next!();
-});
+// app.use(async ({ next }) => {
+//   // TODO: This can be improved in future versions
+//   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+//   await next!();
+// });
 
 // Listens to incoming messages that contain "hello"
 app.message('hello', async ({ message, say }) => {

@@ -8,6 +8,6 @@
   },
   "include": [
     // Since extending a config overwrites the entire value for "include", those value are copied here
-    "src/**/*",
+    "src/**/*.ts",
   ]
 }

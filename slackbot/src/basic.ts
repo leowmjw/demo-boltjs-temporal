@@ -12,6 +12,8 @@ const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
   signingSecret: process.env.SLACK_SIGNING_SECRET,
   logLevel: LogLevel.DEBUG,
+  socketMode: true, // add this
+  appToken: process.env.SLACK_APP_TOKEN, // add this
 });
 
 /**
@@ -35,6 +37,7 @@ app.message('knock knock', async ({ say }) => {
 // Sends a section block with datepicker when someone reacts with a 📅 emoji
 app.event('reaction_added', async ({ event, client }) => {
   // Could be a file that was reacted upon
+  console.log(event.item)
   if (event.reaction === 'calendar' && isMessageItem(event.item)) {
     await client.chat.postMessage({
       text: 'Pick a reminder date',
