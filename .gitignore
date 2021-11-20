@@ -1,0 +1,9 @@
+# Ignore Direnv
+.envrc*
+
+# Ignore Goland
+.idea
+
+# Ignore node_modules
+node_modules
+
