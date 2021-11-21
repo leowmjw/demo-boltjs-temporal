@@ -76,7 +76,7 @@ app.action('button_click', async ({ body, ack, say }) => {
     const g = await f.result()
     // DEBUG
     // console.log("RES: " + g.toString())
-    await say("RES: for" +  `<@${body.user.id}>` + " is " + g)
+    await say("RES: " +  `<@${body.user.id}>` + " - " + JSON.stringify(g, null, 2))
 });
 
 (async () => {
@@ -84,4 +84,8 @@ app.action('button_click', async ({ body, ack, say }) => {
     await app.start(Number(process.env.PORT) || 3000);
 
     console.log('⚡️ Bolt app is running!');
+})();
+
+(async () => {
+    console.log("Concurrent run??? Start and only stop with signal?")
 })();
