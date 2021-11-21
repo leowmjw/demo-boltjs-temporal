@@ -1,6 +1,9 @@
 /* eslint-disable no-console */
 /* eslint-disable import/no-internal-modules */
 import './utils/env';
+// Client for use; singleton
+import {Connection, WorkflowClient, WorkflowStartOptions} from '@temporalio/client';
+
 import { App, LogLevel } from '@slack/bolt';
 import { isGenericMessageEvent } from './utils/helpers';
 
@@ -11,6 +14,14 @@ const app = new App({
   appToken: process.env.SLACK_APP_TOKEN, // add this
   // logLevel: LogLevel.DEBUG,
 });
+
+// Heavyweight client
+const conn = new Connection()
+// How to handle errors??
+const client = new WorkflowClient(conn.service, {
+  namespace: "default",
+});
+
 
 // app.use(async ({ next }) => {
 //   // TODO: This can be improved in future versions
@@ -51,6 +62,18 @@ app.action('button_click', async ({ body, ack, say }) => {
   // Acknowledge the action
   await ack();
   await say(`<@${body.user.id}> clicked the button`);
+  // Run the flow ..
+  let wid;
+  wid = body.user.id + "-42"
+  console.log("Start WF: " + wid)
+  const f = await client.start("SimpleWorkflow", {
+    taskQueue: "catchnoactwf.queue",
+    workflowId: wid
+  })
+  const g = await f.result()
+  // DEBUG
+  // console.log("RES: " + g.toString())
+  await say("RES: for" +  `<@${body.user.id}>` + " is " + g)
 });
 
 (async () => {

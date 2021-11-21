@@ -95,7 +95,8 @@ func run(c client.Client) {
 					return
 					// see if can catch up
 				}
-				werr := wfr.Get(context.Background(), nil)
+				var res string
+				werr := wfr.Get(context.Background(), &res)
 				if werr != nil {
 					// check common cases ...
 					if temporal.IsApplicationError(werr) {
@@ -139,7 +140,8 @@ func run(c client.Client) {
 					//panic(werr)
 					return
 				}
-
+				// Print result of Workflow
+				fmt.Println("RES: ", res)
 			}(i)
 		}
 		//	block until done ..

@@ -11,8 +11,9 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-func SimpleWorkflow(ctx workflow.Context) error {
+func SimpleWorkflow(ctx workflow.Context) (string, error) {
 	i := workflow.GetInfo(ctx)
+	result := fmt.Sprintf("RUNID: %s", i.WorkflowExecution.RunID)
 	fmt.Sprintf("Attempt: %d WID: %s", i.Attempt, i.WorkflowExecution.ID)
 	// Execute activity not registered ..
 	ao := workflow.ActivityOptions{
@@ -65,10 +66,10 @@ func SimpleWorkflow(ctx workflow.Context) error {
 			fmt.Println("yyyyAPP TYPE: ", appErr.Type())
 		}
 
-		return temporal.NewApplicationError("TEST0", "TEST0", err.Error())
+		return "", temporal.NewApplicationError("TEST0", "TEST0", err.Error())
 	}
 
-	return nil
+	return result, nil
 }
 
 func SimpleActivity() error {
