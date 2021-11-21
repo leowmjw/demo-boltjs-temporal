@@ -7,7 +7,8 @@
     "build": "tsc -p .",
     "build:watch": "tsc -w -p .",
     "startjs": "npm run build && node dist/app.js",
-    "start": "ts-node src/app.ts"
+    "start": "ts-node src/app.ts",
+    "demo": "ts-node src/demo.ts"
   },
   "license": "MIT",
   "dependencies": {

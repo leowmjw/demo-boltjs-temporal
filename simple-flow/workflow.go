@@ -11,6 +11,28 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
+type ComplexWFInput struct {
+	Name string
+}
+
+type ComplexWFOutput struct {
+	RunID   string
+	Attempt int
+}
+
+func ComplexWorkflow(ctx workflow.Context, input ComplexWFInput) (ComplexWFOutput, error) {
+	// Has multi-stage state changes?
+	i := workflow.GetInfo(ctx)
+	// Simulate slowness here??
+	//workflow.Sleep(ctx, time.Second)
+	runID := fmt.Sprintf("RUNID: %s ==> %s", input.Name, i.WorkflowExecution.RunID)
+	res := ComplexWFOutput{
+		RunID:   runID,
+		Attempt: int(i.Attempt),
+	}
+	return res, nil
+}
+
 func SimpleWorkflow(ctx workflow.Context) (string, error) {
 	i := workflow.GetInfo(ctx)
 	result := fmt.Sprintf("RUNID: %s", i.WorkflowExecution.RunID)
