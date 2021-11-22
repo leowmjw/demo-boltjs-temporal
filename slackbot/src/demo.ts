@@ -6,6 +6,7 @@ import {Connection, WorkflowClient, WorkflowStartOptions} from '@temporalio/clie
 
 import { App, LogLevel } from '@slack/bolt';
 import { isGenericMessageEvent } from './utils/helpers';
+import { ts_worker_run } from './temporal/worker'
 
 const app = new App({
     token: process.env.SLACK_BOT_TOKEN,
@@ -53,10 +54,44 @@ app.message('demo', async ({ message, say }) => {
                     action_id: 'button_click',
                 },
             },
+            {
+                type: 'section',
+                text: {
+                    type: 'mrkdwn',
+                    text: `Press for TypeScript demo!!`,
+                },
+                accessory: {
+                    type: 'button',
+                    text: {
+                        type: 'plain_text',
+                        text: 'Click TS',
+                    },
+                    action_id: 'button_click_ts',
+                },
+            }
         ],
-        text: `Hey there <@${message.user}>!`,
+        text: `ALT text!!`,
     });
 });
+
+app.action('button_click_ts', async ({ body, ack, say }) => {
+    // Acknowledge the action
+    await ack();
+    await say(`<@${body.user.id}> clicked the TypeScript!!!`);
+    // Run the flow ..
+    let wid = body.user.id + "-simple"
+    console.log("Start WF: " + wid)
+    const f = await client.start("simple_workflow_ts", {
+        taskQueue: "typescript.queue",
+        workflowId: wid,
+        args: [body.user.id],
+    })
+    const g = await f.result()
+    // DEBUG
+    // console.log("RES: " + g.toString())
+    await say("RES: " +  `<@${body.user.id}>` + " - " + g.toString())
+    // await say("RES: " +  `<@${body.user.id}>` + " - " + JSON.stringify(g, null, 2))
+})
 
 app.action('button_click', async ({ body, ack, say }) => {
     // Acknowledge the action
@@ -88,4 +123,9 @@ app.action('button_click', async ({ body, ack, say }) => {
 
 (async () => {
     console.log("Concurrent run??? Start and only stop with signal?")
-})();
+    // await ts_worker_run() // need await
+    ts_worker_run().catch((err) => {
+        console.error(err);
+        process.exit(1);
+    });
+})()

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
+
 	"go.temporal.io/api/enums/v1"
 
 	"go.temporal.io/sdk/temporal"
@@ -37,6 +39,23 @@ func SimpleWorkflow(ctx workflow.Context) (string, error) {
 	i := workflow.GetInfo(ctx)
 	result := fmt.Sprintf("RUNID: %s", i.WorkflowExecution.RunID)
 	fmt.Sprintf("Attempt: %d WID: %s", i.Attempt, i.WorkflowExecution.ID)
+	// Starts uo child TS WOrkflow
+	cwo := workflow.ChildWorkflowOptions{
+		TaskQueue: "typescript.queue",
+		RetryPolicy: &temporal.RetryPolicy{
+			MaximumAttempts: 1,
+		},
+	}
+	ctxChild := workflow.WithChildOptions(ctx, cwo)
+	cwf := workflow.ExecuteChildWorkflow(ctxChild, "simple_workflow_ts", i.WorkflowExecution.ID)
+	var childRes string
+	gerr := cwf.Get(ctxChild, &childRes)
+	if gerr != nil {
+		spew.Dump(gerr)
+		return "", gerr
+	}
+	fmt.Println("RES_TS: ", childRes)
+	// End ChildWrokflow ..
 	// Execute activity not registered ..
 	ao := workflow.ActivityOptions{
 		ScheduleToCloseTimeout: time.Second * 20, // for totsl including retry
