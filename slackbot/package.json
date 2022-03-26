@@ -8,17 +8,18 @@
     "build:watch": "tsc -w -p .",
     "startjs": "npm run build && node dist/app.js",
     "start": "ts-node src/app.ts",
-    "demo": "ts-node src/demo.ts"
+    "demo": "ts-node src/demo.ts",
+    "bg": "ts-node src/breakglass.ts"
   },
   "license": "MIT",
   "dependencies": {
-    "@slack/bolt": "^3.8.x",
-    "dotenv": "^10.0.x",
-    "temporalio": "0.16.x"
+    "@slack/bolt": "^3.10.x",
+    "dotenv": "^16.0.x",
+    "temporalio": "0.19.x"
   },
   "devDependencies": {
-    "@types/node": "^16.11.x",
-    "ts-node": "^10.4.x",
-    "typescript": "^4.5.x"
+    "@types/node": "^17.0.x",
+    "ts-node": "^10.7.x",
+    "typescript": "^4.6.x"
   }
 }

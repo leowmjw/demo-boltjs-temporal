@@ -13,7 +13,7 @@ const app = new App({
     signingSecret: process.env.SLACK_SIGNING_SECRET,
     socketMode: true, // add this
     appToken: process.env.SLACK_APP_TOKEN, // add this
-    // logLevel: LogLevel.DEBUG,
+    logLevel: LogLevel.DEBUG,
 });
 
 // Heavyweight client
@@ -122,10 +122,10 @@ app.action('button_click', async ({ body, ack, say }) => {
 })();
 
 (async () => {
-    console.log("Concurrent run??? Start and only stop with signal?")
     // await ts_worker_run() // need await
     ts_worker_run().catch((err) => {
         console.error(err);
         process.exit(1);
     });
+    console.log("TS Workers are running!!")
 })()
