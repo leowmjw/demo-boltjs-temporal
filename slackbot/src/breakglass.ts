@@ -4,7 +4,7 @@ import './utils/env';
 // Client for use; singleton
 import {Connection, WorkflowClient, WorkflowStartOptions} from '@temporalio/client';
 
-import { App, LogLevel } from '@slack/bolt';
+import {App, BlockElementAction, InteractiveAction, LogLevel} from '@slack/bolt';
 import { isGenericMessageEvent } from './utils/helpers';
 
 const app = new App({
@@ -99,7 +99,8 @@ app.event('app_home_opened', async ({ event, client, logger }) => {
             }
         });
 
-        logger.info(result);
+        // DEBUG
+        // logger.info(result);
     }
     catch (error) {
         logger.error(error);
@@ -108,12 +109,97 @@ app.event('app_home_opened', async ({ event, client, logger }) => {
 
 // On action: homeapp-feature-action
 // Your listener function will be called every time an interactive component with the action_id "approve_button" is triggered
-app.action('homeapp-feature-action', async ({ ack , logger, client , say, payload, respond, body, context}) => {
+app.action('homeapp-feature-action', async ({ action, ack , logger, client , say, payload, respond, body, context}) => {
     await ack();
     // Replace the whole view ..
+
     console.log("USER: "  + body.user.id)
+    let act = JSON.parse(JSON.stringify(payload))
+    console.error("SELECTED: " + act.selected_option?.value)
+
     try {
 
+        // Call views.publish with the built-in client
+        const result = await client.views.publish({
+            // Use the user ID associated with the event
+            user_id: body.user.id,
+            view: {
+                // Home tabs must be enabled in your app configuration page under "App Home"
+                "type": "home",
+                "blocks": [
+                    {
+                        "block_id": "pending-breakglass",
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": "*Pending BreakGlass Requests*"
+                        }
+                    },
+                    {
+                        "type": "divider"
+                    },
+                    {
+                        "type": "input",
+                        "element": {
+                            "type": "static_select",
+                            "placeholder": {
+                                "type": "plain_text",
+                                "text": "Select an item",
+                                "emoji": true
+                            },
+                            "options": [
+                                {
+                                    "text": {
+                                        "type": "plain_text",
+                                        "text": "*this is plain_text text*",
+                                        "emoji": true
+                                    },
+                                    "value": "value-0"
+                                },
+                                {
+                                    "text": {
+                                        "type": "plain_text",
+                                        "text": "*this is plain_text text*",
+                                        "emoji": true
+                                    },
+                                    "value": "value-1"
+                                },
+                                {
+                                    "text": {
+                                        "type": "plain_text",
+                                        "text": "*this is plain_text text*",
+                                        "emoji": true
+                                    },
+                                    "value": "value-2"
+                                }
+                            ],
+                            "action_id": "static_select-action"
+                        },
+                        "label": {
+                            "type": "plain_text",
+                            "text": "Group?",
+                            "emoji": true
+                        }
+                    }
+                ]
+            }
+        });
+        // DEBUG
+        // logger.info(result);
+    }
+    catch (error) {
+        logger.error(error);
+    }
+
+
+});
+
+// On all the details filled in; time to start the process
+app.action('', async ({ack, say, logger, client}) => {
+
+    await ack()
+
+    try {
         // See what is the payload ..
         // DEBUG
         // console.error(JSON.stringify(payload))
@@ -193,77 +279,9 @@ app.action('homeapp-feature-action', async ({ ack , logger, client , say, payloa
         //     console.error(JSON.stringify(msgres.errors))
         // }
 
-        // Call views.publish with the built-in client
-        const result = await client.views.publish({
-            // Use the user ID associated with the event
-            user_id: body.user.id,
-            view: {
-                // Home tabs must be enabled in your app configuration page under "App Home"
-                "type": "home",
-                "blocks": [
-                    {
-                        "type": "section",
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": "*Pending BreakGlass Requests*"
-                        }
-                    },
-                    {
-                        "type": "divider"
-                    },
-                    {
-                        "type": "input",
-                        "element": {
-                            "type": "static_select",
-                            "placeholder": {
-                                "type": "plain_text",
-                                "text": "Select an item",
-                                "emoji": true
-                            },
-                            "options": [
-                                {
-                                    "text": {
-                                        "type": "plain_text",
-                                        "text": "*this is plain_text text*",
-                                        "emoji": true
-                                    },
-                                    "value": "value-0"
-                                },
-                                {
-                                    "text": {
-                                        "type": "plain_text",
-                                        "text": "*this is plain_text text*",
-                                        "emoji": true
-                                    },
-                                    "value": "value-1"
-                                },
-                                {
-                                    "text": {
-                                        "type": "plain_text",
-                                        "text": "*this is plain_text text*",
-                                        "emoji": true
-                                    },
-                                    "value": "value-2"
-                                }
-                            ],
-                            "action_id": "static_select-action"
-                        },
-                        "label": {
-                            "type": "plain_text",
-                            "text": "Group?",
-                            "emoji": true
-                        }
-                    }
-                ]
-            }
-        });
-        // DEBUG
-        // logger.info(result);
+    } catch (error) {
+        logger.error(error)
     }
-    catch (error) {
-        logger.error(error);
-    }
-
 
 });
 
