@@ -4,7 +4,7 @@ import './utils/env';
 // Client for use; singleton
 import {Connection, WorkflowClient, WorkflowStartOptions} from '@temporalio/client';
 
-import {App, BlockElementAction, InteractiveAction, LogLevel} from '@slack/bolt';
+import {App, BlockElementAction, InteractiveAction, LogLevel, View} from '@slack/bolt';
 import { isGenericMessageEvent } from './utils/helpers';
 
 const app = new App({
@@ -107,6 +107,33 @@ app.event('app_home_opened', async ({ event, client, logger }) => {
     }
 });
 
+// On button submit: regexp matches OK or CANCEL
+app.action(/button-breakglass-action-/, async ({ack, payload, body}) => {
+
+    // Do NOT ack if pre-req not met;
+    await ack()
+
+    console.log("USER: "  + body.user.id)
+    console.error("PAYLOAD ==> " + JSON.stringify(payload))
+    const act = JSON.parse(JSON.stringify(payload))
+    // console.error("SELECTED: " + act.selected_option?.value)
+
+    // if cancel; just redirect to home app again ..
+    if (act.value == "CANCEL") {
+
+    }
+
+    // body has the block_actions ... state
+    const mybod = JSON.parse(JSON.stringify(body))
+    const opt = mybod.view.state.values.DOA.BEA.selected_option
+    console.error(opt?.value)
+    // console.error(mybod.view.blocks)
+
+    // app.view('')
+
+});
+
+
 // On action: homeapp-feature-action
 // Your listener function will be called every time an interactive component with the action_id "approve_button" is triggered
 app.action('homeapp-feature-action', async ({ action, ack , logger, client , say, payload, respond, body, context}) => {
@@ -114,8 +141,115 @@ app.action('homeapp-feature-action', async ({ action, ack , logger, client , say
     // Replace the whole view ..
 
     console.log("USER: "  + body.user.id)
-    let act = JSON.parse(JSON.stringify(payload))
+    const act = JSON.parse(JSON.stringify(payload))
     console.error("SELECTED: " + act.selected_option?.value)
+    let view_content: View = {
+        // Home tabs must be enabled in your app configuration page under "App Home"
+        "type": "home",
+        "blocks": [
+            {
+                "block_id": "invalid-block",
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "*INVALID!!!*"
+                }
+            },
+        ]
+    }
+
+    if (act.selected_option?.value == "BREAKGLASS") {
+        view_content = {
+        // Home tabs must be enabled in your app configuration page under "App Home"
+        "type": "home",
+        "blocks": [
+            {
+                "block_id": "pending-breakglass",
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "*Pending BreakGlass Requests*"
+                }
+            },
+            {
+                "type": "divider"
+            },
+            {
+                "type": "input",
+                // "dispatch_action": true,
+                "block_id": "DOA",
+                "element": {
+                    "action_id": "BEA",
+                    "type": "static_select",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Select a group",
+                        "emoji": true
+                    },
+                    "options": [
+                        {
+                            "text": {
+                                "type": "plain_text",
+                                "text": "GroupA",
+                                "emoji": true
+                            },
+                            "value": "GroupA"
+                        },
+                        {
+                            "text": {
+                                "type": "plain_text",
+                                "text": "GroupB",
+                                "emoji": true
+                            },
+                            "value": "GroupB"
+                        },
+                        {
+                            "text": {
+                                "type": "plain_text",
+                                "text": "GroupC",
+                                "emoji": true
+                            },
+                            "value": "GroupC"
+                        }
+                    ],
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "Group?",
+                    "emoji": true
+                }
+            },
+                    {
+                        "block_id": "button-breakglass-action",
+                        "type": "actions",
+                        "elements": [
+                            {
+                                "type": "button",
+                                "text": {
+                                    "type": "plain_text",
+                                    "emoji": true,
+                                    "text": "Approve"
+                                },
+                                "style": "primary",
+                                "value": "OK",
+                                "action_id": "button-breakglass-action-1"
+                            },
+                            {
+                                "type": "button",
+                                "text": {
+                                    "type": "plain_text",
+                                    "emoji": true,
+                                    "text": "Deny"
+                                },
+                                "style": "danger",
+                                "value": "CANCEL",
+                                "action_id": "button-breakglass-action-2"
+                            }
+                        ],
+                    },
+                ]
+            }
+    }
 
     try {
 
@@ -123,66 +257,7 @@ app.action('homeapp-feature-action', async ({ action, ack , logger, client , say
         const result = await client.views.publish({
             // Use the user ID associated with the event
             user_id: body.user.id,
-            view: {
-                // Home tabs must be enabled in your app configuration page under "App Home"
-                "type": "home",
-                "blocks": [
-                    {
-                        "block_id": "pending-breakglass",
-                        "type": "section",
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": "*Pending BreakGlass Requests*"
-                        }
-                    },
-                    {
-                        "type": "divider"
-                    },
-                    {
-                        "type": "input",
-                        "element": {
-                            "type": "static_select",
-                            "placeholder": {
-                                "type": "plain_text",
-                                "text": "Select an item",
-                                "emoji": true
-                            },
-                            "options": [
-                                {
-                                    "text": {
-                                        "type": "plain_text",
-                                        "text": "*this is plain_text text*",
-                                        "emoji": true
-                                    },
-                                    "value": "value-0"
-                                },
-                                {
-                                    "text": {
-                                        "type": "plain_text",
-                                        "text": "*this is plain_text text*",
-                                        "emoji": true
-                                    },
-                                    "value": "value-1"
-                                },
-                                {
-                                    "text": {
-                                        "type": "plain_text",
-                                        "text": "*this is plain_text text*",
-                                        "emoji": true
-                                    },
-                                    "value": "value-2"
-                                }
-                            ],
-                            "action_id": "static_select-action"
-                        },
-                        "label": {
-                            "type": "plain_text",
-                            "text": "Group?",
-                            "emoji": true
-                        }
-                    }
-                ]
-            }
+            view: view_content,
         });
         // DEBUG
         // logger.info(result);
