@@ -5,7 +5,18 @@ import './utils/env';
 import {Connection, WorkflowClient, WorkflowStartOptions} from '@temporalio/client';
 
 import {App, BlockElementAction, InteractiveAction, LogLevel, View} from '@slack/bolt';
-import { Actions, Blocks, Button, Context, DateString, Divider, Markdown, MdSection, User } from '@slack-wrench/blocks';
+import {
+    Actions,
+    Blocks,
+    Button,
+    Context,
+    DateString,
+    Divider, DividerBlock, HomeBlocks,
+    Markdown,
+    MdSection, OptionGroup, OptionObject, Section, SectionBlock,
+    StaticSelect,
+    User
+} from '@slack-wrench/blocks';
 
 import { isGenericMessageEvent } from './utils/helpers';
 
@@ -34,6 +45,36 @@ const client = new WorkflowClient(conn.service, {
     namespace: "default",
 });
 
+// On button submit: regexp matches OK or CANCEL
+app.action(/button-breakglass-action-/, async ({ack, payload, body}) => {
+
+    // Do NOT ack if pre-req not met;
+    await ack()
+
+    console.error("testo ..")
+
+    console.log("USER: "  + body.user.id)
+    console.error("PAYLOAD ==> " + JSON.stringify(payload))
+    const act = JSON.parse(JSON.stringify(payload))
+    // console.error("SELECTED: " + act.selected_option?.value)
+
+    // if cancel; just redirect to home app again ..
+    if (act.value == "CANCEL") {
+
+        console.error("You got CANCELED!!! ****")
+    }
+
+    // body has the block_actions ... state
+    const mybod = JSON.parse(JSON.stringify(body))
+    // const opt = mybod.view.state.values.DOA.BEA.selected_option
+    // console.error(opt?.value)
+    console.error(mybod.view.state.values)
+    // console.error(mybod.view.blocks)
+
+    // app.view('')
+
+});
+
 // Listen for users opening your App Home
 app.event('app_home_opened', async ({ event, client, logger }) => {
     try {
@@ -43,8 +84,21 @@ app.event('app_home_opened', async ({ event, client, logger }) => {
             user_id: event.user,
             "view": {
                 "type": "home",
-                "blocks": [],
-            }
+                "blocks": HomeBlocks(
+                    Blocks([
+                        DividerBlock("div2"),
+                        MdSection(Markdown("*Welcome home, " + User(event.user) + " :house:*").text),
+                        Divider("div1"),
+                        Actions([
+                            Button(':thumbsup:', 'button-breakglass-action-1', {
+                                value: 'OK',
+                            }),
+                            Button(':thumbsdown:', 'button-breakglass-action-2', {
+                                value: 'CANCEL',
+                            }),
+                        ]),
+                    ]),
+                )}
         });
 
     } catch (e) {
