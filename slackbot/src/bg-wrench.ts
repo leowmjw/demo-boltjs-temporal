@@ -4,7 +4,7 @@ import './utils/env';
 // Client for use; singleton
 import {Connection, WorkflowClient, WorkflowStartOptions} from '@temporalio/client';
 
-import {App, BlockElementAction, InteractiveAction, LogLevel, View} from '@slack/bolt';
+import {App, AppHomeOpenedEvent, BlockElementAction, InteractiveAction, KnownBlock, LogLevel, View} from '@slack/bolt';
 import {
     Actions,
     Blocks,
@@ -51,16 +51,15 @@ app.action(/button-breakglass-action-/, async ({ack, payload, body}) => {
     // Do NOT ack if pre-req not met;
     await ack()
 
-    console.error("testo ..")
-
-    console.log("USER: "  + body.user.id)
-    console.error("PAYLOAD ==> " + JSON.stringify(payload))
+    // DEBUG
+    // console.error("testo ..")
+    // console.log("USER: "  + body.user.id)
+    // console.error("PAYLOAD ==> " + JSON.stringify(payload))
     const act = JSON.parse(JSON.stringify(payload))
     // console.error("SELECTED: " + act.selected_option?.value)
 
     // if cancel; just redirect to home app again ..
     if (act.value == "CANCEL") {
-
         console.error("You got CANCELED!!! ****")
     }
 
@@ -71,48 +70,78 @@ app.action(/button-breakglass-action-/, async ({ack, payload, body}) => {
     // DEBUG
     // console.error(mybod.view.state.values)
     // console.error(mybod.view.blocks)
-
+    const duration = mybod.view.state.values["input-duration"]["static-select-duration"].selected_option
+    console.error("DURATION: " + duration?.value)
     // app.view('')
 
 });
 
+// Dynnamically render the view ..
+function render_app_home_view(event :AppHomeOpenedEvent) :View {
+    return {
+        type: "home",
+        blocks: HomeBlocks(
+            [
+                DividerBlock("div2"),
+                MdSection(`*Welcome home, ${User(event.user)} :house:*`, {
+                    accessory: Button('Search', 'changeSearch'),
+                }),
+                Divider("div1"),
+                Context([
+                    Markdown(
+                        `120 members\nLast post: ${DateString(1575643433, '{date_pretty}', '1575643433')}`,
+                    ),
+                ]),
+                InputBlock("Groups?",
+                    StaticSelect("static-select-group-action", "placeholder ...",
+                        [
+                            OptionObject("GroupA", "GroupA"),
+                            OptionObject("GroupB", "GroupB"),
+                            OptionObject("GroupC", "GroupC"),
+                        ],
+                        OptionObject("GroupB", "GroupB"),
+                    ), "input-group", PlainTextElement(":smile:", true), false,
+                ),
+                InputBlock("Duration?",
+                    StaticSelect("static-select-duration", "placeholder ...",
+                        [
+                            OptionObject("10 min", "600"),
+                            OptionObject("4 hours", "14400"),
+                            OptionObject("8 hours", "28800"),
+                        ],
+                        OptionObject("10 min", "600"),
+                    ), "input-duration", PlainTextElement(":cry:", true), false,
+                ),
+                Actions([
+                    Button(':thumbsup:', 'button-breakglass-action-1', {
+                        value: 'OK',
+                    }),
+                    Button(':thumbsdown:', 'button-breakglass-action-2', {
+                        value: 'CANCEL',
+                    }),
+                ]),
+            ],
+        ),
+        private_metadata: "secrettzz",
+    }
+}
 // Listen for users opening your App Home
 app.event('app_home_opened', async ({ event, client, logger }) => {
     try {
+        const v = render_app_home_view(event)
+        // DEBUG
+        // console.error("META:" + v.private_metadata + " EXTID: " + v.external_id + " CALLID: " + v.callback_id)
+        // console.error(v.blocks)
         // Call views.publish with the built-in client
         const result = await client.views.publish({
             // Use the user ID associated with the event
             user_id: event.user,
-            "view": {
-                "type": "home",
-                "blocks": HomeBlocks(
-             [
-                        DividerBlock("div2"),
-                        MdSection(Markdown("*Welcome home, " + User(event.user) + " :house:*").text),
-                        Divider("div1"),
-                        InputBlock("Groups?",
-                            StaticSelect("static-select-group-action", "placeholder ...",
-                            [
-                                OptionObject("GroupA","GroupA"),
-                                OptionObject("GroupB","GroupB"),
-                                OptionObject("GroupC","GroupC"),
-                            ],
-                            OptionObject("GroupB","GroupB"),
-                            ), "input-group", PlainTextElement(":smile:", true), true,
-                        ),
-                        Actions([
-                            Button(':thumbsup:', 'button-breakglass-action-1', {
-                                value: 'OK',
-                            }),
-                            Button(':thumbsdown:', 'button-breakglass-action-2', {
-                                value: 'CANCEL',
-                            }),
-                        ]),
-                    ],
-                ),
-            }
+            view: v,
         });
-
+        // Catch unexpected publish errors?
+        if (!result.ok) {
+            console.error("PUB_ERR: " + result.error + " METADATA: " + result.response_metadata)
+        }
     } catch (e) {
         console.error("UNKNOWN: " + e)
     }
