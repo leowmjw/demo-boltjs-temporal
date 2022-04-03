@@ -4,6 +4,7 @@
   "description": "Bolt getting started app in TypeScript",
   "main": "dist/app.js",
   "scripts": {
+    "update:dep": "npx npm-check-updates -u",
     "build": "tsc -p .",
     "build:watch": "tsc -w -p .",
     "startjs": "npm run build && node dist/app.js",
@@ -15,7 +16,7 @@
   "license": "MIT",
   "dependencies": {
     "@slack-wrench/blocks": "^3.1.2",
-    "@slack/bolt": "^3.10.x",
+    "@slack/bolt": "^3.11.x",
     "dotenv": "^16.0.x",
     "temporalio": "0.19.x"
   },
