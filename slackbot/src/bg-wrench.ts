@@ -11,9 +11,9 @@ import {
     Button,
     Context,
     DateString,
-    Divider, DividerBlock, HomeBlocks,
+    Divider, DividerBlock, HomeBlocks, InputBlock,
     Markdown,
-    MdSection, OptionGroup, OptionObject, Section, SectionBlock,
+    MdSection, OptionGroup, OptionObject, PlainTextElement, Section, SectionBlock,
     StaticSelect,
     User
 } from '@slack-wrench/blocks';
@@ -66,9 +66,10 @@ app.action(/button-breakglass-action-/, async ({ack, payload, body}) => {
 
     // body has the block_actions ... state
     const mybod = JSON.parse(JSON.stringify(body))
-    // const opt = mybod.view.state.values.DOA.BEA.selected_option
-    // console.error(opt?.value)
-    console.error(mybod.view.state.values)
+    const opt = mybod.view.state.values["input-group"]["static-select-group-action"].selected_option
+    console.error(opt?.value)
+    // DEBUG
+    // console.error(mybod.view.state.values)
     // console.error(mybod.view.blocks)
 
     // app.view('')
@@ -85,10 +86,20 @@ app.event('app_home_opened', async ({ event, client, logger }) => {
             "view": {
                 "type": "home",
                 "blocks": HomeBlocks(
-                    Blocks([
+             [
                         DividerBlock("div2"),
                         MdSection(Markdown("*Welcome home, " + User(event.user) + " :house:*").text),
                         Divider("div1"),
+                        InputBlock("Groups?",
+                            StaticSelect("static-select-group-action", "placeholder ...",
+                            [
+                                OptionObject("GroupA","GroupA"),
+                                OptionObject("GroupB","GroupB"),
+                                OptionObject("GroupC","GroupC"),
+                            ],
+                            OptionObject("GroupB","GroupB"),
+                            ), "input-group", PlainTextElement(":smile:", true), true,
+                        ),
                         Actions([
                             Button(':thumbsup:', 'button-breakglass-action-1', {
                                 value: 'OK',
@@ -97,8 +108,9 @@ app.event('app_home_opened', async ({ event, client, logger }) => {
                                 value: 'CANCEL',
                             }),
                         ]),
-                    ]),
-                )}
+                    ],
+                ),
+            }
         });
 
     } catch (e) {
