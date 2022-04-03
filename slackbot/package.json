@@ -9,10 +9,12 @@
     "startjs": "npm run build && node dist/app.js",
     "start": "ts-node src/app.ts",
     "demo": "ts-node src/demo.ts",
-    "bg": "ts-node src/breakglass.ts"
+    "bg": "ts-node src/breakglass.ts",
+    "bgw": "ts-node src/bg-wrench.ts"
   },
   "license": "MIT",
   "dependencies": {
+    "@slack-wrench/blocks": "^3.1.2",
     "@slack/bolt": "^3.10.x",
     "dotenv": "^16.0.x",
     "temporalio": "0.19.x"
